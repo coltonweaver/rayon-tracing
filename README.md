@@ -1,1 +1,1 @@
-# rayon-tracing-in-one-weekend
+# rayon-tracing

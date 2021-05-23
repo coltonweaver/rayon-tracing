@@ -1,53 +1,74 @@
-use crate::vec3::{Point3, Vec3};
 use crate::ray::Ray;
 use crate::utils::{degrees_to_radians, random_in_unit_disk};
+use crate::vec3::{Point3, Vec3};
+
+use std::sync::Arc;
 
 pub struct Camera {
-    pub origin: Point3,
-    pub lower_left_corner: Point3,
-    pub horizontal: Vec3,
-    pub vertical: Vec3,
-    pub w: Vec3,
-    pub u: Vec3,
-    pub v: Vec3,
-    pub lens_radius: f64,
+    pub origin: Arc<Point3>,
+    pub lower_left_corner: Arc<Point3>,
+    pub horizontal: Arc<Vec3>,
+    pub vertical: Arc<Vec3>,
+    pub w: Arc<Vec3>,
+    pub u: Arc<Vec3>,
+    pub v: Arc<Vec3>,
+    pub lens_radius: f32,
 }
 
 impl Camera {
-    pub fn new(lookfrom: Point3, lookat: Point3, vup: Vec3, vfov: f64, aspect_ratio: f64, aperture: f64, focus_dist: f64) -> Self {
-        let theta: f64 = degrees_to_radians(vfov);
-        let h: f64 = (theta / 2.0).tan();
-        let viewport_height: f64 = 2.0 * h;
-        let viewport_width: f64 = aspect_ratio * viewport_height;
-        
-        let w: Vec3 = (lookfrom - lookat).unit_vector();
-        let u: Vec3 = vup.cross(w).unit_vector();
-        let v: Vec3 = w.cross(u);
+    pub fn new(
+        lookfrom: Arc<Point3>,
+        lookat: Arc<Point3>,
+        vup: Arc<Vec3>,
+        vfov: f32,
+        aspect_ratio: f32,
+        aperture: f32,
+        focus_dist: f32,
+    ) -> Self {
+        let theta = degrees_to_radians(vfov);
+        let h = (theta / 2.0).tan();
+        let viewport_height = 2.0 * h;
+        let viewport_width = aspect_ratio * viewport_height;
+
+        let w = Arc::new((lookfrom.as_ref() - lookat.as_ref()).unit_vector());
+        let u = Arc::new(vup.cross(w.as_ref()).unit_vector());
+        let v = Arc::new(w.cross(u.as_ref()));
 
         let origin = lookfrom;
-        let horizontal = u * viewport_width * focus_dist;
-        let vertical = v * viewport_height * focus_dist;
-        let lower_left_corner = origin - (horizontal / 2.0) - (vertical / 2.0) - (w * focus_dist);
+        let horizontal = Arc::new(u.as_ref() * viewport_width * focus_dist);
+        let vertical = Arc::new(v.as_ref() * viewport_height * focus_dist);
+        let lower_left_corner = Arc::new(
+            origin.as_ref()
+                - (horizontal.as_ref() / 2.0f32)
+                - (vertical.as_ref() / 2.0f32)
+                - (w.as_ref() * focus_dist),
+        );
 
         Camera {
-            origin: origin,
-            horizontal: horizontal,
-            vertical: vertical,
-            lower_left_corner: lower_left_corner,
-            w: w,
-            u: u,
-            v: v,
+            origin,
+            horizontal,
+            vertical,
+            lower_left_corner,
+            w,
+            u,
+            v,
             lens_radius: aperture / 2.0,
         }
     }
 
-    pub fn get_ray(&self, s: f64, t: f64) -> Ray {
-        let rd: Vec3 = random_in_unit_disk() * self.lens_radius;
-        let offset: Vec3 = (self.u * rd.x) + (self.v * rd.y);
+    pub fn get_ray(&self, s: f32, t: f32) -> Ray {
+        let rd = random_in_unit_disk() * self.lens_radius;
+        let offset = Arc::new((self.u.as_ref() * rd.x) + (self.v.as_ref() * rd.y));
 
         Ray {
-            orig: self.origin + offset, 
-            dir: self.lower_left_corner + (self.horizontal * s) + (self.vertical * t) - self.origin - offset
+            orig: Arc::new(self.origin.as_ref() + offset.as_ref()),
+            dir: Arc::new(
+                self.lower_left_corner.as_ref()
+                    + (self.horizontal.as_ref() * s)
+                    + (self.vertical.as_ref() * t)
+                    - self.origin.as_ref()
+                    - offset.as_ref(),
+            ),
         }
     }
 }

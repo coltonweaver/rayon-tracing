@@ -17,8 +17,8 @@ pub fn ray_color(r: &mut Ray, world: &HittableList, depth: i32) -> Color {
     }
 
     if let Some(hit) = world.hit(&r, 0.001, f32::INFINITY) {
-        if let Some(mut result) = hit.mat.scatter(r, &hit) {
-            return ray_color(&mut result.0, world, depth - 1) * result.1.as_ref();
+        if let Some((mut ray, color)) = hit.mat.scatter(r, &hit) {
+            return ray_color(&mut ray, world, depth - 1) * color;
         }
 
         return Color::zeroes();
@@ -93,13 +93,13 @@ pub fn random_in_unit_disk() -> Vec3 {
 // World
 
 pub fn random_scene(world: &mut HittableList) {
-    let ground_material = Arc::new(Lambertian {
-        albedo: Arc::new(Color::new(0.5, 0.5, 0.5)),
-    });
-    let ground_sphere = Arc::new(Sphere {
-        center: Arc::new(Point3::new(0.0, -1000.0, 0.0)),
+    let ground_material = Lambertian {
+        albedo: Color::new(0.5, 0.5, 0.5),
+    };
+    let ground_sphere = Box::new(Sphere {
+        center: Point3::new(0.0, -1000.0, 0.0),
         radius: 1000.0,
-        m: ground_material,
+        m: Arc::new(ground_material),
     });
     world.objects.push(ground_sphere);
 
@@ -108,40 +108,36 @@ pub fn random_scene(world: &mut HittableList) {
             let choose_mat: f32 = rand::random();
             let rand_1: f32 = rand::random();
             let rand_2: f32 = rand::random();
-            let center = Arc::new(Point3::new(
-                a as f32 + 0.9 * rand_1,
-                0.2,
-                b as f32 + 0.9 * rand_2,
-            ));
+            let center = Point3::new(a as f32 + 0.9 * rand_1, 0.2, b as f32 + 0.9 * rand_2);
 
-            if (center.as_ref() - Point3::new(4.0, 0.2, 0.0)).length() > 0.9 {
+            if (center - Point3::new(4.0, 0.2, 0.0)).length() > 0.9 {
                 if choose_mat < 0.8 {
                     // diffuse
-                    let albedo = Arc::new(Color::random() * Color::random());
-                    let sphere_material = Arc::new(Lambertian { albedo });
-                    let sphere = Arc::new(Sphere {
+                    let albedo = Color::random() * Color::random();
+                    let sphere_material = Lambertian { albedo };
+                    let sphere = Box::new(Sphere {
                         center,
                         radius: 0.2,
-                        m: sphere_material,
+                        m: Arc::new(sphere_material),
                     });
                     world.objects.push(sphere);
                 } else if choose_mat < 0.95 {
                     let mut rng = thread_rng();
-                    let albedo = Arc::new(Color::random_range(0.5, 1.0));
+                    let albedo = Color::random_range(0.5, 1.0);
                     let fuzz = rng.gen_range(0.0, 0.5);
-                    let sphere_material = Arc::new(Metal { albedo, fuzz });
-                    let sphere = Arc::new(Sphere {
+                    let sphere_material = Metal { albedo, fuzz };
+                    let sphere = Box::new(Sphere {
                         center,
                         radius: 0.2,
-                        m: sphere_material,
+                        m: Arc::new(sphere_material),
                     });
                     world.objects.push(sphere);
                 } else {
-                    let sphere_material = Arc::new(Dialectric { ir: 1.5 });
-                    let sphere = Arc::new(Sphere {
+                    let sphere_material = Dialectric { ir: 1.5 };
+                    let sphere = Box::new(Sphere {
                         center,
                         radius: 0.2,
-                        m: sphere_material,
+                        m: Arc::new(sphere_material),
                     });
                     world.objects.push(sphere);
                 }
@@ -149,29 +145,29 @@ pub fn random_scene(world: &mut HittableList) {
         }
     }
 
-    let material_1 = Arc::new(Dialectric { ir: 1.5 });
-    world.objects.push(Arc::new(Sphere {
-        center: Arc::new(Point3::new(0.0, 1.0, 0.0)),
+    let material_1 = Dialectric { ir: 1.5 };
+    world.objects.push(Box::new(Sphere {
+        center: Point3::new(0.0, 1.0, 0.0),
         radius: 1.0,
-        m: material_1,
+        m: Arc::new(material_1),
     }));
 
-    let material_2 = Arc::new(Lambertian {
-        albedo: Arc::new(Color::new(0.4, 0.2, 0.1)),
-    });
-    world.objects.push(Arc::new(Sphere {
-        center: Arc::new(Point3::new(-4.0, 1.0, 0.0)),
+    let material_2 = Lambertian {
+        albedo: Color::new(0.4, 0.2, 0.1),
+    };
+    world.objects.push(Box::new(Sphere {
+        center: Point3::new(-4.0, 1.0, 0.0),
         radius: 1.0,
-        m: material_2,
+        m: Arc::new(material_2),
     }));
 
-    let material_3 = Arc::new(Metal {
-        albedo: Arc::new(Color::new(0.7, 0.6, 0.5)),
+    let material_3 = Metal {
+        albedo: Color::new(0.7, 0.6, 0.5),
         fuzz: 0.0,
-    });
-    world.objects.push(Arc::new(Sphere {
-        center: Arc::new(Point3::new(4.0, 1.0, 0.0)),
+    };
+    world.objects.push(Box::new(Sphere {
+        center: Point3::new(4.0, 1.0, 0.0),
         radius: 1.0,
-        m: material_3,
+        m: Arc::new(material_3),
     }));
 }

@@ -5,7 +5,6 @@ use rayon::prelude::*;
 use std::{
     fs::File,
     io::{BufWriter, Write},
-    sync::Arc,
 };
 
 use camera::Camera;
@@ -37,9 +36,9 @@ fn main() {
     utils::random_scene(&mut world);
 
     // Camera
-    let lookfrom = Arc::new(Point3::new(13.0, 2.0, 3.0));
-    let lookat = Arc::new(Point3::zeroes());
-    let vup = Arc::new(Vec3::new(0.0, 1.0, 0.0));
+    let lookfrom = Point3::new(13.0, 2.0, 3.0);
+    let lookat = Point3::zeroes();
+    let vup = Vec3::new(0.0, 1.0, 0.0);
     let aperture: f32 = 0.1;
     let dist_to_focus: f32 = 10.0;
 
@@ -57,7 +56,7 @@ fn main() {
 
     let image_vec: Vec<Vec<Color>> =
         vec![vec![Color::zeroes(); IMAGE_WIDTH as usize]; IMAGE_HEIGHT as usize];
-    let synchronized_image_vec = Arc::new(RwLock::new(image_vec));
+    let synchronized_image_vec = RwLock::new(image_vec);
 
     eprintln!(
         "Rendering image with resolution of {}x{}:",

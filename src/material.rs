@@ -4,48 +4,47 @@ use crate::utils::{random_in_unit_sphere, random_unit_vector};
 use crate::vec3::{Color, Vec3};
 
 use rand::random;
-use std::sync::Arc;
 
 pub trait Material {
-    fn scatter(&self, ray_in: &mut Ray, rec: &HitRecord) -> Option<(Ray, Arc<Color>)>;
+    fn scatter(&self, ray_in: &mut Ray, rec: &HitRecord) -> Option<(Ray, Color)>;
 }
 
 pub struct Lambertian {
-    pub albedo: Arc<Color>,
+    pub albedo: Color,
 }
 
 impl Material for Lambertian {
-    fn scatter(&self, _ray_in: &mut Ray, rec: &HitRecord) -> Option<(Ray, Arc<Color>)> {
-        let mut scatter_direction = Arc::new(rec.normal.as_ref() + random_unit_vector());
+    fn scatter(&self, _ray_in: &mut Ray, rec: &HitRecord) -> Option<(Ray, Color)> {
+        let mut scatter_direction = rec.normal + random_unit_vector();
 
         if scatter_direction.near_zero() {
-            scatter_direction = rec.normal.clone();
+            scatter_direction = rec.normal;
         }
 
         let scattered = Ray {
-            orig: rec.p.clone(),
+            orig: rec.p,
             dir: scatter_direction,
         };
 
-        Some((scattered, self.albedo.clone()))
+        Some((scattered, self.albedo))
     }
 }
 
 pub struct Metal {
-    pub albedo: Arc<Color>,
+    pub albedo: Color,
     pub fuzz: f32,
 }
 
 impl Material for Metal {
-    fn scatter(&self, ray_in: &mut Ray, rec: &HitRecord) -> Option<(Ray, Arc<Color>)> {
-        let reflected = reflect(&ray_in.dir.unit_vector(), rec.normal.as_ref());
+    fn scatter(&self, ray_in: &mut Ray, rec: &HitRecord) -> Option<(Ray, Color)> {
+        let reflected = reflect(&ray_in.dir.unit_vector(), &rec.normal);
         let scattered = Ray {
             orig: rec.p.clone(),
-            dir: Arc::new(reflected + (random_in_unit_sphere() * self.fuzz)),
+            dir: reflected + (random_in_unit_sphere() * self.fuzz),
         };
 
         if scattered.dir.dot(&rec.normal) > 0.0 {
-            Some((scattered, self.albedo.clone()))
+            Some((scattered, self.albedo))
         } else {
             None
         }
@@ -57,7 +56,7 @@ pub struct Dialectric {
 }
 
 impl Material for Dialectric {
-    fn scatter(&self, ray_in: &mut Ray, rec: &HitRecord) -> Option<(Ray, Arc<Color>)> {
+    fn scatter(&self, ray_in: &mut Ray, rec: &HitRecord) -> Option<(Ray, Color)> {
         let refraction_ratio: f32;
         if rec.front_face {
             refraction_ratio = 1.0 / self.ir;
@@ -72,17 +71,17 @@ impl Material for Dialectric {
 
         let direction: Vec3;
         if cannot_refract || reflectance(cos_theta, refraction_ratio) > random() {
-            direction = reflect(&unit_direction, rec.normal.as_ref());
+            direction = reflect(&unit_direction, &rec.normal);
         } else {
-            direction = refract(&unit_direction, rec.normal.as_ref(), refraction_ratio);
+            direction = refract(&unit_direction, &rec.normal, refraction_ratio);
         }
 
         let res_ray: Ray = Ray {
-            orig: rec.p.clone(),
-            dir: Arc::new(direction),
+            orig: rec.p,
+            dir: direction,
         };
 
-        Some((res_ray, Arc::new(Color::ones())))
+        Some((res_ray, Color::ones()))
     }
 }
 

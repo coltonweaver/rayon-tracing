@@ -15,18 +15,18 @@ pub struct Lambertian {
 
 impl Material for Lambertian {
     fn scatter(&self, _ray_in: &mut Ray, rec: &HitRecord) -> Option<(Ray, Color)> {
-        let mut scatter_direction = rec.normal + random_unit_vector();
+        let mut scatter_direction = &rec.normal + random_unit_vector();
 
         if scatter_direction.near_zero() {
-            scatter_direction = rec.normal;
+            scatter_direction = rec.normal.clone();
         }
 
         let scattered = Ray {
-            orig: rec.p,
+            orig: rec.p.clone(),
             dir: scatter_direction,
         };
 
-        Some((scattered, self.albedo))
+        Some((scattered, self.albedo.clone()))
     }
 }
 
@@ -44,7 +44,7 @@ impl Material for Metal {
         };
 
         if scattered.dir.dot(&rec.normal) > 0.0 {
-            Some((scattered, self.albedo))
+            Some((scattered, self.albedo.clone()))
         } else {
             None
         }
@@ -65,7 +65,7 @@ impl Material for Dialectric {
         }
 
         let unit_direction: Vec3 = ray_in.dir.unit_vector();
-        let cos_theta: f32 = (-unit_direction.clone()).dot(&rec.normal).min(1.0);
+        let cos_theta: f32 = (-&unit_direction).dot(&rec.normal).min(1.0);
         let sin_theta: f32 = (1.0 - cos_theta * cos_theta).sqrt();
         let cannot_refract: bool = (refraction_ratio * sin_theta) > 1.0;
 
@@ -77,7 +77,7 @@ impl Material for Dialectric {
         }
 
         let res_ray: Ray = Ray {
-            orig: rec.p,
+            orig: rec.p.clone(),
             dir: direction,
         };
 

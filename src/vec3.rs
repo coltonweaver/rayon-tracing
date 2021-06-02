@@ -5,7 +5,7 @@ use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub};
 pub type Color = Vec3;
 pub type Point3 = Vec3;
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct Vec3 {
     pub x: f32,
     pub y: f32,
@@ -13,33 +13,40 @@ pub struct Vec3 {
 }
 
 impl Vec3 {
-    #[inline]
-    pub const fn new(x: f32, y: f32, z: f32) -> Self {
-        Vec3 { x, y, z }
+    pub fn new(x: f32, y: f32, z: f32) -> Self {
+        Self { x, y, z }
     }
 
-    #[inline]
-    pub const fn zeroes() -> Self {
-        Vec3::new(0.0, 0.0, 0.0)
+    pub fn zeroes() -> Self {
+        Self {
+            x: 0.0,
+            y: 0.0,
+            z: 0.0,
+        }
     }
 
-    #[inline]
-    pub const fn ones() -> Self {
-        Vec3::new(1.0, 1.0, 1.0)
+    pub fn ones() -> Self {
+        Self {
+            x: 1.0,
+            y: 1.0,
+            z: 1.0,
+        }
     }
 
-    #[inline]
     pub fn random() -> Self {
-        Vec3::new(rand::random(), rand::random(), rand::random())
+        Self {
+            x: rand::random(),
+            y: rand::random(),
+            z: rand::random(),
+        }
     }
 
-    #[inline]
     pub fn random_range(min: f32, max: f32) -> Self {
         let mut rng = thread_rng();
         Vec3::new(
-            rng.gen_range(min, max),
-            rng.gen_range(min, max),
-            rng.gen_range(min, max),
+            rng.gen_range(min..max),
+            rng.gen_range(min..max),
+            rng.gen_range(min..max),
         )
     }
 

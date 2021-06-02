@@ -83,7 +83,7 @@ pub fn random_unit_vector() -> Vec3 {
 pub fn random_in_unit_disk() -> Vec3 {
     loop {
         let mut rng = thread_rng();
-        let p: Vec3 = Vec3::new(rng.gen_range(-1.0, 1.0), rng.gen_range(-1.0, 1.0), 0.0);
+        let p: Vec3 = Vec3::new(rng.gen_range(-1.0..1.0), rng.gen_range(-1.0..1.0), 0.0);
         if p.length_squared() < 1.0 {
             return p;
         }
@@ -93,13 +93,13 @@ pub fn random_in_unit_disk() -> Vec3 {
 // World
 
 pub fn random_scene(world: &mut HittableList) {
-    let ground_material = Lambertian {
+    let ground_material = Arc::new(Lambertian {
         albedo: Color::new(0.5, 0.5, 0.5),
-    };
+    });
     let ground_sphere = Box::new(Sphere {
         center: Point3::new(0.0, -1000.0, 0.0),
         radius: 1000.0,
-        m: Arc::new(ground_material),
+        m: ground_material,
     });
     world.objects.push(ground_sphere);
 
@@ -110,7 +110,7 @@ pub fn random_scene(world: &mut HittableList) {
             let rand_2: f32 = rand::random();
             let center = Point3::new(a as f32 + 0.9 * rand_1, 0.2, b as f32 + 0.9 * rand_2);
 
-            if (center - Point3::new(4.0, 0.2, 0.0)).length() > 0.9 {
+            if (center.clone() - Point3::new(4.0, 0.2, 0.0)).length() > 0.9 {
                 if choose_mat < 0.8 {
                     // diffuse
                     let albedo = Color::random() * Color::random();
@@ -124,7 +124,7 @@ pub fn random_scene(world: &mut HittableList) {
                 } else if choose_mat < 0.95 {
                     let mut rng = thread_rng();
                     let albedo = Color::random_range(0.5, 1.0);
-                    let fuzz = rng.gen_range(0.0, 0.5);
+                    let fuzz = rng.gen_range(0.0..0.5);
                     let sphere_material = Metal { albedo, fuzz };
                     let sphere = Box::new(Sphere {
                         center,

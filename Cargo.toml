@@ -8,5 +8,10 @@ edition = "2018"
 
 [dependencies]
 parking_lot = "0.11.1"
-rand = "0.7.3"
-rayon = "1.5.0"
+rand = "0.8.3"
+
+[dependencies.tokio]
+version = "1.6.1"
+default-features = true
+
+features = ["full"]

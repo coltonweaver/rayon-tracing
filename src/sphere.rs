@@ -1,9 +1,9 @@
+use std::sync::Arc;
+
 use crate::hittable::{HitRecord, Hittable};
 use crate::material::Material;
 use crate::ray::Ray;
 use crate::vec3::{Point3, Vec3};
-
-use std::sync::Arc;
 
 pub struct Sphere {
     pub center: Point3,
@@ -13,12 +13,12 @@ pub struct Sphere {
 
 impl Hittable for Sphere {
     fn hit(&self, r: &Ray, t_min: f32, t_max: f32) -> Option<HitRecord> {
-        let oc = r.orig - self.center;
+        let oc = &r.orig - &self.center;
         let a = r.dir.length_squared();
         let half_b = oc.dot(&r.dir);
         let c = oc.length_squared() - (self.radius * self.radius);
 
-        let discriminant = (half_b * half_b) - (a * c);
+        let discriminant = half_b.powi(2) - (a * c);
         if discriminant < 0.0 {
             return None;
         }
@@ -33,15 +33,15 @@ impl Hittable for Sphere {
             }
         }
 
-        let point = r.at(root);
+        let point = &r.at(root);
         let mut record = HitRecord {
             t: root,
-            p: point,
+            p: point.clone(),
             normal: Vec3::zeroes(),
             front_face: false,
-            mat: self.m.clone(),
+            mat: self.m.as_ref(),
         };
-        let outward_normal = (point - self.center) / self.radius;
+        let outward_normal = (point - &self.center) / self.radius;
         record.set_face_normal(r, outward_normal);
 
         Some(record)
